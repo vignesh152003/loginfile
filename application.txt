@@ -1,0 +1,200 @@
+                  HTML PAGE
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console Application</title>
+    <link rel="stylesheet" href="layout.css">
+</head>
+<body>
+    <div id="app">
+        <div id="login-form">
+            <h2>Login</h2>
+            <input type="text" id="login-username" placeholder="Username">
+            <input type="password" id="login-password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <button onclick="showSignup()">Sign Up</button>
+        </div>
+
+        <div id="signup-form" style="display: none;">
+            <h2>Sign Up</h2>
+            <input type="text" id="signup-username" placeholder="Username">
+            <input type="password" id="signup-password" placeholder="Password">
+            <button onclick="signup()">Sign Up</button>
+            <button onclick="showLogin()">Back to Login</button>
+        </div>
+
+        <div id="change-password-form" style="display: none;">
+            <h2>Change Password</h2>
+            <input type="password" id="old-password" placeholder="Old Password">
+            <input type="password" id="new-password" placeholder="New Password">
+            <button onclick="changePassword()">Change Password</button>
+        </div>
+
+        <div id="post-form" style="display: none;">
+            <h2>New Post</h2>
+            <textarea id="post-content" placeholder="Write something..."></textarea>
+            <select id="post-visibility">
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+            </select>
+            <button onclick="postMessage()">Post</button>
+        </div>
+
+        <div id="posts" style="display: none;">
+            <h2>Posts</h2>
+            <div id="post-list"></div>
+        </div>
+    </div>
+
+    <script src="js.js"></script>
+</body>
+</html>
+****************************************************************************************
+                             CSS PAGE
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#app {
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+}
+
+input, textarea, select {
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+h2 {
+    margin: 0 0 20px 0;
+    text-align: center;
+}
+*************************************************************************************
+                               JAVA SCRIPT
+let users = {};
+let currentUser = null;
+
+function showSignup() {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('signup-form').style.display = 'block';
+}
+
+function showLogin() {
+    document.getElementById('signup-form').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+}
+
+function signup() {
+    const username = document.getElementById('signup-username').value;
+    const password = document.getElementById('signup-password').value;
+
+    if (users[username]) {
+        alert('Username already exists.');
+        return;
+    }
+
+    users[username] = {
+        password,
+        previousPasswords: [password],
+        posts: []
+    };
+
+    alert('Signup successful.');
+    showLogin();
+}
+
+function login() {
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+
+    if (!users[username] || users[username].password !== password) {
+        alert('Invalid username or password.');
+        return;
+    }
+
+    currentUser = username;
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('signup-form').style.display = 'none';
+    document.getElementById('post-form').style.display = 'block';
+    document.getElementById('posts').style.display = 'block';
+    document.getElementById('change-password-form').style.display = 'block';
+    loadPosts();
+}
+
+function changePassword() {
+    const oldPassword = document.getElementById('old-password').value;
+    const newPassword = document.getElementById('new-password').value;
+
+    if (users[currentUser].password !== oldPassword) {
+        alert('Old password is incorrect.');
+        return;
+    }
+
+    if (users[currentUser].previousPasswords.includes(newPassword)) {
+        alert('You cannot use one of the last 3 passwords.');
+        return;
+    }
+
+    users[currentUser].password = newPassword;
+    users[currentUser].previousPasswords.push(newPassword);
+
+    if (users[currentUser].previousPasswords.length > 3) {
+        users[currentUser].previousPasswords.shift();
+    }
+
+    alert('Password changed successfully.');
+}
+
+function postMessage() {
+    const content = document.getElementById('post-content').value;
+    const visibility = document.getElementById('post-visibility').value;
+
+    users[currentUser].posts.push({
+        content,
+        visibility,
+        username: currentUser
+    });
+
+    document.getElementById('post-content').value = '';
+    loadPosts();
+}
+
+function loadPosts() {
+    const postList = document.getElementById('post-list');
+    postList.innerHTML = '';
+
+    Object.keys(users).forEach(username => {
+        users[username].posts.forEach(post => {
+            if (post.visibility === 'public' || post.username === currentUser) {
+                const postDiv = document.createElement('div');
+                postDiv.innerText = `${post.username}: ${post.content} (${post.visibility})`;
+                postList.appendChild(postDiv);
+            }
+        });
+    });
+}
+***************************************************************************************
